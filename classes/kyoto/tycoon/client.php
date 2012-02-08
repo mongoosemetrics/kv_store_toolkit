@@ -72,11 +72,6 @@ class Kyoto_Tycoon_Client {
         return self::$instances[$name];
     }
 
-    // Constants for Base64-encoded keywords
-    const BASE64_KEY = 'a2V5';
-    const BASE64_NUM = 'bnVt';
-    const BASE64_VALUE = 'dmFsdWU=';
-
     // Constants for tab-separated-values format
     const TAB = "\t";
     const LF = "\n";
