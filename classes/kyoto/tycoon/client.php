@@ -3,7 +3,7 @@
  * Manages the low-level communication with the Kyoto Tycoon server using
  * the REST Client stuff for the actual HTTP/curl logic.
  *
- * @package    Kohana/Kyoto Tycoon Client
+ * @package    Kohana/Kyoto Tycoon Toolkit
  * @category   Extension
  * @author     Kohana Team
  * @copyright  (c) 2011-2012 Kohana Team
@@ -102,7 +102,7 @@ class Kyoto_Tycoon_Client {
      * @var  object  Holds a reference to the REST_Client class instance we
      *               use to do HTTP communication with Kyoto Tycoon.
      */
-    protected $_rest_client = NULL;
+    protected $_client = NULL;
 
     /**
      * Stores the client configuration locally and names the instance.
@@ -124,7 +124,7 @@ class Kyoto_Tycoon_Client {
 
         // Create a new REST_Client to do the HTTP communication with the
         // Kyoto Tycoon server
-        $this->_rest_client = REST_Client::instance($name, array(
+        $this->_client = REST_Client::instance($name, array(
             'uri' => 'http://'.$config['host'].':'.$config['port'].'/',
             'content_type' => self::CONTENT_TYPE_BASE64_ENCODED,
         ));
@@ -202,13 +202,28 @@ class Kyoto_Tycoon_Client {
     /**
      * Handles the retrieval of a single Kyoto Tycoon key/value pair.
      *
-     * @param   string  The name of the key being set.
+     * @param   string  The name of the key being retrieved.
      * @return  string  The result of the Kyoto Tycoon call.
      */
     public function get($key)
     {
         // Make the Kyoto Tycoon RPC request
         $response = $this->_rpc('get', array('key' => $key));
+
+        // Return the value member
+        return isset($response['value']) ? $response['value'] : NULL;
+    }
+
+    /**
+     * Returns and atomically removes a single Kyoto Tycoon key/value pair.
+     *
+     * @param   string  The name of the key being retrieved.
+     * @return  string  The result of the Kyoto Tycoon call.
+     */
+    public function seize($key)
+    {
+        // Make the Kyoto Tycoon RPC request
+        $response = $this->_rpc('seize', array('key' => $key));
 
         // Return the value member
         return isset($response['value']) ? $response['value'] : NULL;
@@ -272,7 +287,7 @@ class Kyoto_Tycoon_Client {
             self::CONTENT_TYPE_BASE64_ENCODED, $data);
 
         // Make the request using the the REST Client's POST method
-        $result = $this->_rest_client->post('rpc/'.$method, $data);
+        $result = $this->_client->post('rpc/'.$method, $data);
 
         // If we get back anything other then a status 200
         if ($result->status !== REST_Client::HTTP_OK) {
