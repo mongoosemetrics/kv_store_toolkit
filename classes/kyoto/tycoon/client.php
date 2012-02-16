@@ -193,7 +193,7 @@ class Kyoto_Tycoon_Client {
         }
 
         // Make the Kyoto Tycoon RPC request
-        $response = $this->_rpc('set', $request);
+        $this->_rpc('set', $request);
 
         // Return a reference to this class instance
         return $this;
@@ -264,6 +264,23 @@ class Kyoto_Tycoon_Client {
         // Return the incremented number
         return isset($response['num']) ? $response['num'] : NULL;
     }
+
+    /**
+     * Removes a single Kyoto Tycoon key/value pair.
+     *
+     * @param   string  The name of the key being retrieved.
+     * @return  object  A reference to this class instance, so we can do
+     *                  method chaining.
+     */
+    public function remove($key)
+    {
+        // Make the Kyoto Tycoon RPC request
+        $this->_rpc('remove', array('key' => $key));
+
+        // Return the instance of this class
+        return $this;
+    }
+
     /**
      * Performs a Kyoto Tycoon RPC request over HTTP POST, encoding the passed
      * request data and decoding the response.
