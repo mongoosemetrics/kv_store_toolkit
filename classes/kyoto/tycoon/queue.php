@@ -11,51 +11,9 @@
 class Kyoto_Tycoon_Queue {
 
     /**
-     * @var  string  The default instance name.
+     * @var  string  Holds the queue name.
      */
-    public static $default = 'default';
-
-    /**
-     * @var  array  References to all of the client instances.
-     */
-    public static $instances = array();
-
-    /**
-     * Get a singleton object instance of this class. If configuration is not
-     * specified, it will be loaded from the kyoto configuration file using
-     * the same group as the provided name.
-     *
-     *     // Load the default client instance
-     *     $client = Kohana_Tycoon_Queue::instance();
-     *
-     *     // Create a custom configured instance
-     *     $client = Kohana_Tycoon_Queue::instance('custom', $config);
-     *
-     * @param   string   instance name
-     * @param   array    configuration parameters
-     * @return  Kyoto_Tycoon_Client
-     */
-    public static function instance($name = NULL, $config = NULL)
-    {
-        if ($name === NULL)
-        {
-            // Use the default instance name
-            $name = self::$default;
-        }
-
-        if ( ! isset(self::$instances[$name]))
-        {
-            // Create the queue instance
-            new Kyoto_Tycoon_Queue($name, $config);
-        }
-
-        return self::$instances[$name];
-    }
-
-    /**
-     * @var  string  Holds the instance name.
-     */
-    protected $_instance = NULL;
+    protected $_name = NULL;
 
     /**
      * @var  object  Holds a reference to the Kyoto_Tycoon_Client class
@@ -72,26 +30,22 @@ class Kyoto_Tycoon_Queue {
     const SUFFIX_INDEX_SEPARATOR = '_';
 
     /**
-     * Stores the client configuration locally and names the instance.
+     * Sets up a queue for
      *
-     * [!!] This method cannot be accessed directly, you must use [Kyoto_Tycoon_Client::instance].
-     *
-     * @return  void
+     * @param  string  The name of the queue.
+     * @param  string  Optional. The name of the Kyoto_Tycoon_Client instance
+     *                 to make the actual calls. Defaults to 'default'.
+     * @param  array   Optional. An array of configuration data to pass to
+     *                 the Kyoto_Tycoon_Client class. Defaults to NULL.
      */
-    protected function __construct($name, array $config)
+    public function __construct($name, $client_name = NULL, $config = NULL)
     {
-        // Set the instance name
-        $this->_instance = $name;
-
-        // Store the config locally
-        $this->_config = $config;
-
-        // Store this client instance
-        self::$instances[$name] = $this;
+        // Set the queue name
+        $this->_name = $name;
 
         // Create a new Kyoto_Tycoon_Client to do the actual communication with
         // the Kyoto Tycoon server
-        $this->_client = Kyoto_Tycoon_Client::instance($name, $config);
+        $this->_client = Kyoto_Tycoon_Client::instance($client_name, $config);
     }
 
     /**
@@ -177,7 +131,7 @@ class Kyoto_Tycoon_Queue {
     protected function _get_key_prefix()
     {
         // Return the prefix for all of the keys
-        return self::PREFIX_QUEUE.strtoupper($this->_instance);
+        return self::PREFIX_QUEUE.strtoupper($this->_name);
     }
 
     /**
