@@ -62,19 +62,29 @@ class Kyoto_Tycoon_Queue {
             // Return the fact that we have no data to process
             return (object) array(
                 'found' => FALSE,
+                'reason' => __('Unable to get read lock.'),
+                'read_position' => NULL,
+                'write_position' => NULL,
                 'data' => NULL,
             );
         }
 
+        // Grab the current read and write positions
+        $read_position = $this->_get_read_position();
+        $write_position = $this->_get_write_position();
+
         // If the current read position is the same (or greater than :O) the
         // current write position
-        if ($this->_get_read_position() >= $this->_get_write_position()) {
+        if ($read_position >= $write_position) {
             // Remove the lock
             $this->_unlock();
 
             // Return the fact that we have no data to process
             return (object) array(
                 'found' => FALSE,
+                'reason' => __('Read and write positions are the same.'),
+                'read_position' => $read_position,
+                'write_position' => $write_position,
                 'data' => NULL,
             );
         }
@@ -95,6 +105,9 @@ class Kyoto_Tycoon_Queue {
         // Return the fact that we found data as well as the data itself
         return (object) array(
             'found' => TRUE,
+            'reason' => __('Found data.'),
+            'read_position' => $read_position,
+            'write_position' => $write_position,
             'data' => $data,
         );
     }
