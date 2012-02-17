@@ -244,7 +244,7 @@ class Kyoto_Tycoon_Queue {
         $key_name = $this->_get_key_prefix().self::SUFFIX_READ;
 
         // Return the current read position as an integer. If it is not
-        // already defined, it will be set to 1.
+        // already defined, it will be set to 0
         return (int) $this->_client->increment($key_name, 0, 0);
     }
 
@@ -259,7 +259,7 @@ class Kyoto_Tycoon_Queue {
         $key_name = $this->_get_key_prefix().self::SUFFIX_WRITE;
 
         // Return the current write position as an integer. If it is not
-        // already defined, it will be set to 1.
+        // already defined, it will be set to 0
         return (int) $this->_client->increment($key_name, 0, 0);
     }
 
