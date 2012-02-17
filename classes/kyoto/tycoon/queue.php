@@ -29,6 +29,10 @@ class Kyoto_Tycoon_Queue {
     const SUFFIX_WRITE = '_WRITE';
     const SUFFIX_INDEX_SEPARATOR = '_';
 
+    // Constants for error codes
+    const ERROR_LOCK_TIMEOUT = 408;
+    const ERROR_EMPTY_QUEUE = 404;
+
     /**
      * Sets up a queue for
      *
@@ -51,22 +55,44 @@ class Kyoto_Tycoon_Queue {
     /**
      * Attempts to shift the next item from the queue.
      *
+     * @param   int     Optional. The number of seconds we will continue to
+     *                  try and get the read lock. Defaults to 0.
      * @return  object  An object with a 'found' and a 'data' member. If the
      *                  'found' member is TRUE, then we have data to process
      *                  in the 'data' member.
      */
-    public function shift()
+    public function shift($lock_timeout = 0)
     {
-        // If we can't get the lock
-        if ( ! $this->_lock()) {
-            // Return the fact that we have no data to process
-            return (object) array(
-                'found' => FALSE,
-                'reason' => __('Unable to get read lock.'),
-                'read_position' => NULL,
-                'write_position' => NULL,
-                'data' => NULL,
-            );
+        // Determine the lock expiration microtime
+        $expiration_microtime = microtime(TRUE) + $lock_timeout;
+
+        // Start an infinite loop to try and get the lock until we either
+        // succeed in getting the lock, or exceed the lock timeout
+        while (TRUE) {
+
+            // If we can't get the lock
+            if ( ! $this->_lock()) {
+                // Grab the current microtime
+                $current_microtime = microtime(TRUE);
+
+                // If we have exceeded the lock timeout
+                if ($current_microtime > $expiration_microtime) {
+                    // Throw an exception
+                    throw new Kyoto_Tycoon_Queue_Exception('Unable to get '.
+                        'read lock within ":lock_timeout" seconds.', array(
+                            ':lock_timeout' => (string) $lock_timeout,
+                        ), self::ERROR_LOCK_TIMEOUT);
+                }
+
+                // Sleep for a second
+                sleep(1);
+
+                // Continue the loop
+                continue;
+            }
+
+            // Break out of the loop
+            break;
         }
 
         // Grab the current read and write positions
@@ -79,14 +105,9 @@ class Kyoto_Tycoon_Queue {
             // Remove the lock
             $this->_unlock();
 
-            // Return the fact that we have no data to process
-            return (object) array(
-                'found' => FALSE,
-                'reason' => __('Read and write positions are the same.'),
-                'read_position' => $read_position,
-                'write_position' => $write_position,
-                'data' => NULL,
-            );
+            // Throw an exception
+            throw new Kyoto_Tycoon_Queue_Exception('No data in queue.', NULL,
+                self::ERROR_EMPTY_QUEUE);
         }
 
         // Increment the read position
@@ -102,14 +123,8 @@ class Kyoto_Tycoon_Queue {
         // Sieze the data
         $data = $this->_client->seize($key_name);
 
-        // Return the fact that we found data as well as the data itself
-        return (object) array(
-            'found' => TRUE,
-            'reason' => __('Found data.'),
-            'read_position' => $read_position,
-            'write_position' => $write_position,
-            'data' => $data,
-        );
+        // Return the data
+        return $data;
     }
 
     /**
