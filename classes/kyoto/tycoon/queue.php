@@ -76,6 +76,9 @@ class Kyoto_Tycoon_Queue {
         // If the current read position is the same (or greater than :O) the
         // current write position
         if ($read_position >= $write_position) {
+            // Reset the read and write positions
+            $this->_reset_read_and_write_positions();
+
             // Remove the lock
             $this->_unlock();
 
@@ -286,6 +289,25 @@ class Kyoto_Tycoon_Queue {
 
         // Increment the write position and return it as integer
         return (int) $this->_client->increment($key_name, 1, 0);
+    }
+
+    /**
+     * Resets the read and write positions.
+     *
+     * @return  object  The instance of this class so we can do
+     *                  method chaining.
+     */
+    protected function _reset_read_and_write_positions()
+    {
+        // Grab the key prefix
+        $key_prefix = $this->_get_key_prefix();
+
+        // Reset the read and write positions
+        $this->_client->remove($key_prefix.self::SUFFIX_READ);
+        $this->_client->remove($key_prefix.self::SUFFIX_WRITE);
+
+        // Return the instance of this class
+        return $this;
     }
 
 } // End Kyoto_Tycoon_Queue
