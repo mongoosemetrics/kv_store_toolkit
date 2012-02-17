@@ -22,6 +22,9 @@ class Kyoto_Tycoon_Queue {
      */
     protected $_client = NULL;
 
+    // No matter what, locks expire after 30 seconds
+    const LOCK_EXPIRES = 30;
+
     // Constants for key prefixes and suffixes
     const PREFIX_QUEUE = 'QUEUE_';
     const SUFFIX_LOCK = '_LOCK';
@@ -122,6 +125,9 @@ class Kyoto_Tycoon_Queue {
         // Set the data
         $this->_client->set($key_name, $data);
 
+        // Remove the lock
+        $this->_unlock();
+
         // Return the instance of this class
         return $this;
     }
@@ -177,7 +183,8 @@ class Kyoto_Tycoon_Queue {
         // succeed in getting the lock, or exceed the lock timeout
         while (TRUE) {
             // Do an increment on the key name and grab the result
-            $result = (int) $this->_client->increment($key_name, 1, 0);
+            $result = (int) $this->_client->increment($key_name, 1, 0,
+                self::LOCK_EXPIRES);
 
             // If we did not get exactly the number 1, we did not get the lock
             if ($result !== 1) {
