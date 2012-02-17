@@ -151,6 +151,25 @@ class Kyoto_Tycoon_Queue {
     }
 
     /**
+     * Returns an object with queue status information.
+     *
+     * @return  object  An object with key/value pairs.
+     */
+    public function status()
+    {
+        // Grab the current read and write positions
+        $read_position = $this->_get_read_position();
+        $write_position = $this->_get_write_position();
+
+        // Return information about the queue
+        return (object) array(
+            'read_position' => $read_position,
+            'write_position' => $write_position,
+            'queue_count' => $write_position - $read_position,
+        );
+    }
+
+    /**
      * Returns the full key prefix using the instance name.
      *
      * @return  string  The prefix for all of the keys required to represent
