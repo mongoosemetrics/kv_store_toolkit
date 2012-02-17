@@ -56,44 +56,15 @@ class Kyoto_Tycoon_Queue {
      * Attempts to shift the next item from the queue.
      *
      * @param   int     Optional. The number of seconds we will continue to
-     *                  try and get the read lock. Defaults to 0.
+     *                  try to get the lock. Defaults to 0 seconds.
      * @return  object  An object with a 'found' and a 'data' member. If the
      *                  'found' member is TRUE, then we have data to process
      *                  in the 'data' member.
      */
     public function shift($lock_timeout = 0)
     {
-        // Determine the lock expiration microtime
-        $expiration_microtime = microtime(TRUE) + $lock_timeout;
-
-        // Start an infinite loop to try and get the lock until we either
-        // succeed in getting the lock, or exceed the lock timeout
-        while (TRUE) {
-
-            // If we can't get the lock
-            if ( ! $this->_lock()) {
-                // Grab the current microtime
-                $current_microtime = microtime(TRUE);
-
-                // If we have exceeded the lock timeout
-                if ($current_microtime > $expiration_microtime) {
-                    // Throw an exception
-                    throw new Kyoto_Tycoon_Queue_Exception('Unable to get '.
-                        'read lock within ":lock_timeout" seconds.', array(
-                            ':lock_timeout' => (string) $lock_timeout,
-                        ), self::ERROR_LOCK_TIMEOUT);
-                }
-
-                // Sleep for a second
-                sleep(1);
-
-                // Continue the loop
-                continue;
-            }
-
-            // Break out of the loop
-            break;
-        }
+        // Attempt to get the lock
+        $this->_lock($lock_timeout);
 
         // Grab the current read and write positions
         $read_position = $this->_get_read_position();
@@ -131,11 +102,16 @@ class Kyoto_Tycoon_Queue {
      * Attempts to push a new item into the queue.
      *
      * @param   string  The data to push into the queue.
+     * @param   int     Optional. The number of seconds we will continue to
+     *                  try to get the lock. Defaults to 30 seconds.
      * @return  object  The instance of this class so we can do
      *                  method chaining.
      */
-    public function push($data)
+    public function push($data, $lock_timeout = 30)
     {
+        // Attempt to get the lock
+        $this->_lock($lock_timeout);
+
         // Increment the write position
         $write_position = $this->_increment_write_position();
 
@@ -184,25 +160,49 @@ class Kyoto_Tycoon_Queue {
     /**
      * Attempts to get a lock on the queue.
      *
+     * @param   int      The number of seconds we will continue to try to get
+     *                   the lock.
      * @return  boolean  If we were able to get the lock, TRUE. If we were
      *                   unable to get the lock, FALSE.
      */
-    protected function _lock()
+    protected function _lock($lock_timeout)
     {
-        // Determine the name of the key
+        // Determine the lock expiration microtime
+        $expiration_microtime = microtime(TRUE) + $lock_timeout;
+
+        // Determine the name of the lock key
         $key_name = $this->_get_key_prefix().self::SUFFIX_LOCK;
 
-        // Do an increment on the key name and grab the result
-        $result = (int) $this->_client->increment($key_name, 1, 0);
+        // Start an infinite loop to try and get the lock until we either
+        // succeed in getting the lock, or exceed the lock timeout
+        while (TRUE) {
+            // Do an increment on the key name and grab the result
+            $result = (int) $this->_client->increment($key_name, 1, 0);
 
-        // If we did not get exactly the number 1
-        if ($result !== 1) {
-            // We were unable to get the lock, so return FALSE
-            return FALSE;
+            // If we did not get exactly the number 1, we did not get the lock
+            if ($result !== 1) {
+                // Grab the current microtime
+                $current_microtime = microtime(TRUE);
+
+                // If we have exceeded the lock timeout
+                if ($current_microtime > $expiration_microtime) {
+                    // Throw an exception
+                    throw new Kyoto_Tycoon_Queue_Exception('Unable to get '.
+                        'lock within ":lock_timeout" seconds.', array(
+                            ':lock_timeout' => (string) $lock_timeout,
+                        ), self::ERROR_LOCK_TIMEOUT);
+                }
+
+                // Sleep for 1/4th of a second
+                usleep((int) (0.25 * 1000 * 1000));
+
+                // Continue the loop
+                continue;
+            }
+
+            // We got the lock
+            return TRUE;
         }
-
-        // We got the lock
-        return TRUE;
     }
 
     /**
