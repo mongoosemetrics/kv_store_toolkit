@@ -185,6 +185,9 @@ class Kyoto_Tycoon_ORM {
         // Re-join the remaining parts and use that as the key name prefix
         $key_name_prefix = implode('_', $class_name_parts);
 
+        // Convert the key name prefix to all uppercase
+        $key_name_prefix = strtoupper($key_name_prefix);
+
         // Return the Kyoto Tycoon key name
         return $key_name_prefix.'_'.((string) $this->_id);
     }
