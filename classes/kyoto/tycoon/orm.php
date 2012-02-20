@@ -139,7 +139,7 @@ class Kyoto_Tycoon_ORM {
     public function export()
     {
         // Return a copy of the data cast into an object
-        return (object) unserialize(serialize($this->_data));
+        return json_decode(json_encode($this->_data));
     }
 
     /**
