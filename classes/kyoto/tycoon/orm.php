@@ -132,6 +132,17 @@ class Kyoto_Tycoon_ORM {
     }
 
     /**
+     * Returns a copy of all of the data on this record.
+     *
+     * @return  object  An object with all of the data on this record.
+     */
+    public function export()
+    {
+        // Return a copy of the data cast into an object
+        return (object) unserialize(serialize($this->_data));
+    }
+
+    /**
      * Attempts to load the data from Kyoto Tycoon.
      *
      * @return  object  The reference to this class instance so we can do
