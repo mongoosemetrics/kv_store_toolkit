@@ -9,4 +9,4 @@
  * @copyright  (c) 2011-2012 Kohana Team
  * @license    http://kohanaphp.com/license
  */
-class Kyoto_Tycoon_Queue_Exception extends Kyoto_Tycoon_Exception {}
+class Kyoto_Tycoon_ORM_Exception extends Kyoto_Tycoon_Exception {}

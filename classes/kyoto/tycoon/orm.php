@@ -151,8 +151,8 @@ class Kyoto_Tycoon_ORM {
         // If the attempt to decode failed
         if ($data === NULL AND $encoded_data !== 'null') {
             // Throw an exception
-            throw new Kyoto_Tycoon_Exception('JSON decode failure.',
-                NULL, 404);
+            throw new Kyoto_Tycoon_ORM_Exception('JSON decode failure.',
+                NULL, 500);
         }
 
         // If we made it down here, we were able to load the record
