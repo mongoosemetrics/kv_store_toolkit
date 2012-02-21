@@ -1,7 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
- * Provides a simple abstraction for working with key/value pair objects
- * stored in Kyoto Tycoon.
+ * Provides a simple abstraction for working with JSON-encoded objects.
  *
  * @package    Kohana/Kyoto Tycoon Toolkit
  * @category   Extension
