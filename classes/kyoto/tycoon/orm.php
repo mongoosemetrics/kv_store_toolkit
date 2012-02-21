@@ -152,8 +152,15 @@ class Kyoto_Tycoon_ORM {
         // Determine the key name
         $key_name = $this->_get_key_name();
 
-        // Attempt to load this record from Kyoto Tycoon
-        $encoded_data = $this->_client->get($key_name);
+        // Wrap the call to get the data
+        try {
+            // Attempt to load this record from Kyoto Tycoon
+            $encoded_data = $this->_client->get($key_name);
+        // Catch any exceptions
+        } catch (Kyoto_Tycoon_Exception $exception) {
+            // Return a reference to this class instance
+            return $this;
+        }
 
         // Attempt to deserialize (what should be) the JSON-encoded value
         $data = json_decode($encoded_data);
