@@ -63,6 +63,10 @@ class Kyoto_Tycoon_ORM {
         if (isset($this->_id)) {
             // Attempt to load this record
             $this->_load();
+        // If this is a new record
+        } else {
+            // Overlay the defaults
+            $this->_data = $this->_get_defaults();
         }
     }
 
@@ -110,6 +114,18 @@ class Kyoto_Tycoon_ORM {
     {
         // Return the data, if it is available
         return isset($this->_data[$name]) ? $this->_data[$name] : NULL;
+    }
+
+    /**
+     * This function is intended to be overridden by child class definitions.
+     *
+     * @return  array  A collection of column-name => column-value pairs to use
+     *                 as the default values for new records.
+     */
+    protected function _get_defaults()
+    {
+        // Return an empty array
+        return array();
     }
 
     /**
