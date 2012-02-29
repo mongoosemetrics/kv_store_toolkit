@@ -32,7 +32,7 @@ class Kyoto_Tycoon_Queue {
     const ERROR_EMPTY_QUEUE = 404;
 
     /**
-     * Sets up a queue for
+     * Sets up a queue abstraction for the passed key name.
      *
      * @param  string  The name of the queue.
      * @param  string  Optional. The name of the Kyoto_Tycoon_Client instance
