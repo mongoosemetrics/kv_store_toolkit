@@ -111,7 +111,7 @@ class Kyoto_Tycoon_Queue {
     public function push($data, $lock_timeout = 30)
     {
         // Attempt to get the lock
-        $this->_client->_lock($this->_get_key_prefix(),$lock_timeout);
+        $this->_client->_lock($this->_get_key_prefix(), $lock_timeout);
 
         // Increment the write position
         $write_position = $this->_increment_write_position();
