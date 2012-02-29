@@ -62,7 +62,7 @@ class Kyoto_Tycoon_Queue {
     public function shift($lock_timeout = 0)
     {
         // Attempt to get the lock
-        $this->_client->_lock($this->_get_key_prefix(),$lock_timeout);
+        $this->_client->_lock($this->_get_key_prefix(), $lock_timeout);
 
         // Grab the current read and write positions
         $read_position = $this->_get_read_position();
