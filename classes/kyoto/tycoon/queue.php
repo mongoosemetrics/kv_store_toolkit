@@ -22,18 +22,13 @@ class Kyoto_Tycoon_Queue {
      */
     protected $_client = NULL;
 
-    // No matter what, locks expire after 30 seconds
-    const LOCK_EXPIRES = 30;
-
     // Constants for key prefixes and suffixes
     const PREFIX_QUEUE = 'QUEUE_';
-    const SUFFIX_LOCK = '_LOCK';
     const SUFFIX_READ = '_READ';
     const SUFFIX_WRITE = '_WRITE';
     const SUFFIX_INDEX_SEPARATOR = '_';
 
     // Constants for error codes
-    const ERROR_LOCK_TIMEOUT = 408;
     const ERROR_EMPTY_QUEUE = 404;
 
     /**
@@ -67,7 +62,7 @@ class Kyoto_Tycoon_Queue {
     public function shift($lock_timeout = 0)
     {
         // Attempt to get the lock
-        $this->_lock($lock_timeout);
+        $this->_client->_lock($this->_get_key_prefix(),$lock_timeout);
 
         // Grab the current read and write positions
         $read_position = $this->_get_read_position();
@@ -80,7 +75,7 @@ class Kyoto_Tycoon_Queue {
             $this->_reset_read_and_write_positions();
 
             // Remove the lock
-            $this->_unlock();
+            $this->_client->_unlock($this->_get_key_prefix());
 
             // Throw an exception
             throw new Kyoto_Tycoon_Queue_Exception('No data in queue.', NULL,
@@ -91,7 +86,7 @@ class Kyoto_Tycoon_Queue {
         $read_position = $this->_increment_read_position();
 
         // Remove the lock
-        $this->_unlock();
+        $this->_client->_unlock($this->_get_key_prefix());
 
         // Determine the name of the data key
         $key_name = $this->_get_key_prefix().
@@ -116,7 +111,7 @@ class Kyoto_Tycoon_Queue {
     public function push($data, $lock_timeout = 30)
     {
         // Attempt to get the lock
-        $this->_lock($lock_timeout);
+        $this->_client->_lock($this->_get_key_prefix(),$lock_timeout);
 
         // Increment the write position
         $write_position = $this->_increment_write_position();
@@ -129,7 +124,7 @@ class Kyoto_Tycoon_Queue {
         $this->_client->set($key_name, $data);
 
         // Remove the lock
-        $this->_unlock();
+        $this->_client->_unlock($this->_get_key_prefix());
 
         // Return the instance of this class
         return $this;
@@ -164,73 +159,6 @@ class Kyoto_Tycoon_Queue {
     {
         // Return the prefix for all of the keys
         return self::PREFIX_QUEUE.strtoupper($this->_name);
-    }
-
-    /**
-     * Attempts to get a lock on the queue.
-     *
-     * @param   int      The number of seconds we will continue to try to get
-     *                   the lock.
-     * @return  boolean  If we were able to get the lock, TRUE. If we were
-     *                   unable to get the lock, FALSE.
-     */
-    protected function _lock($lock_timeout)
-    {
-        // Determine the lock expiration microtime
-        $expiration_microtime = microtime(TRUE) + $lock_timeout;
-
-        // Determine the name of the lock key
-        $key_name = $this->_get_key_prefix().self::SUFFIX_LOCK;
-
-        // Start an infinite loop to try and get the lock until we either
-        // succeed in getting the lock, or exceed the lock timeout
-        while (TRUE) {
-            // Do an increment on the key name and grab the result
-            $result = (int) $this->_client->increment($key_name, 1, 0,
-                self::LOCK_EXPIRES);
-
-            // If we did not get exactly the number 1, we did not get the lock
-            if ($result !== 1) {
-                // Grab the current microtime
-                $current_microtime = microtime(TRUE);
-
-                // If we have exceeded the lock timeout
-                if ($current_microtime > $expiration_microtime) {
-                    // Throw an exception
-                    throw new Kyoto_Tycoon_Queue_Exception('Unable to get '.
-                        'lock within ":lock_timeout" seconds.', array(
-                            ':lock_timeout' => (string) $lock_timeout,
-                        ), self::ERROR_LOCK_TIMEOUT);
-                }
-
-                // Sleep for 1/4th of a second
-                usleep((int) (0.25 * 1000 * 1000));
-
-                // Continue the loop
-                continue;
-            }
-
-            // We got the lock
-            return TRUE;
-        }
-    }
-
-    /**
-     * Attempts to remove the lock on the queue.
-     *
-     * @return  object  The instance of this class so we can do
-     *                  method chaining.
-     */
-    protected function _unlock()
-    {
-        // Determine the name of the key
-        $key_name = $this->_get_key_prefix().self::SUFFIX_LOCK;
-
-        // Attempt to remove the key
-        $this->_client->remove($key_name);
-
-        // Return the instance of this class
-        return $this;
     }
 
     /**

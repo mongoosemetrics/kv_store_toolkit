@@ -527,4 +527,76 @@ class Kyoto_Tycoon_Client {
             '":content_type".', array(':content_type' => $content_type));
     }
 
+    // No matter what, locks expire after 30 seconds
+    const LOCK_EXPIRES = 30;
+    const SUFFIX_LOCK = '_LOCK';
+    const ERROR_LOCK_TIMEOUT = 408;
+
+    /**
+     * Attempts to get a lock on the queue.
+     *
+     * @param   int      The number of seconds we will continue to try to get
+     *                   the lock.
+     * @return  boolean  If we were able to get the lock, TRUE. If we were
+     *                   unable to get the lock, FALSE.
+     */
+    public function _lock($name,$lock_timeout)
+    {
+        // Determine the lock expiration microtime
+        $expiration_microtime = microtime(TRUE) + $lock_timeout;
+
+        // Determine the name of the lock key
+        $key_name = $name.self::SUFFIX_LOCK;
+
+        // Start an infinite loop to try and get the lock until we either
+        // succeed in getting the lock, or exceed the lock timeout
+        while (TRUE) {
+            // Do an increment on the key name and grab the result
+            $result = (int) $this->increment($key_name, 1, 0,
+                self::LOCK_EXPIRES);
+
+            // If we did not get exactly the number 1, we did not get the lock
+            if ($result !== 1) {
+                // Grab the current microtime
+                $current_microtime = microtime(TRUE);
+
+                // If we have exceeded the lock timeout
+                if ($current_microtime > $expiration_microtime) {
+                    // Throw an exception
+                    throw new Kyoto_Tycoon_Queue_Exception('Unable to get '.
+                        'lock within ":lock_timeout" seconds.', array(
+                            ':lock_timeout' => (string) $lock_timeout,
+                        ), self::ERROR_LOCK_TIMEOUT);
+                }
+
+                // Sleep for 1/4th of a second
+                usleep((int) (0.25 * 1000 * 1000));
+
+                // Continue the loop
+                continue;
+            }
+
+            // We got the lock
+            return TRUE;
+        }
+    }
+
+    /**
+     * Attempts to remove the lock on the queue.
+     *
+     * @return  object  The instance of this class so we can do
+     *                  method chaining.
+     */
+    public function _unlock($name)
+    {
+        // Determine the name of the key
+        $key_name = $name.self::SUFFIX_LOCK;
+
+        // Attempt to remove the key
+        $this->remove($key_name);
+
+        // Return the instance of this class
+        return $this;
+    }
+
 } // End Kyoto_Tycoon_Client
