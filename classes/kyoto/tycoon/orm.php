@@ -28,8 +28,8 @@ class Kyoto_Tycoon_ORM {
     protected $_id = NULL;
 
     /**
-     * @var  boolean  If we were able to load the data, this variable will be
-     *                set to TRUE.
+     * @var  bool  If we were able to load the data, this variable will be
+     *             set to TRUE.
      */
     protected $_loaded = FALSE;
 
@@ -147,6 +147,17 @@ class Kyoto_Tycoon_ORM {
     }
 
     /**
+     * Returns boolean TRUE if the record was successfully loaded.
+     *
+     * @return  bool  If we loaded the record, TRUE.
+     */
+    public function loaded()
+    {
+        // Return if we were loaded or not
+        return $this->_loaded;
+    }
+
+    /**
      * Returns a copy of all of the data on this record.
      *
      * @return  object  An object with all of the data on this record.
@@ -167,6 +178,12 @@ class Kyoto_Tycoon_ORM {
     {
         // Determine the key name
         $key_name = $this->_get_key_name();
+
+        // Set the loaded flag to false
+        $this->_loaded = FALSE;
+
+        // Erase the data on this record
+        $this->_data = array();
 
         // Wrap the call to get the data
         try {
