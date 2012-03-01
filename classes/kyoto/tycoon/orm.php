@@ -65,8 +65,18 @@ class Kyoto_Tycoon_ORM {
             $this->_load();
         // If this is a new record
         } else {
-            // Overlay the defaults
-            $this->_data = $this->_get_defaults();
+            // Grab the defaults and cast them to an object so we know what
+            // syntax to use
+            $defaults = (object) $this->_get_defaults();
+
+            // If the primary key is one of the defaults
+            if (isset($defaults->$this->_primary_key_name)) {
+                // Copy the primary key value
+                $this->_id = $defaults->$this->_primary_key_name;
+            }
+
+            // Set up the default data
+            $this->_data = $defaults;
         }
     }
 
