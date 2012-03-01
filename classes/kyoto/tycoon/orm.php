@@ -102,6 +102,8 @@ class Kyoto_Tycoon_ORM {
      * Traps any calls to set undefined virtual properties on this
      * class instance.
      *
+     * @param   string  The name of the key to set.
+     * @param   string  The value to assign.
      * @return  void
      */
     public function __set($name, $value)
@@ -121,12 +123,26 @@ class Kyoto_Tycoon_ORM {
      * Traps any calls to get undefined virtual properties on this
      * class instance.
      *
-     * @return  mixed  The data in this member variable.
+     * @param   string  The name of the key to return.
+     * @return  mixed   The data in this member variable.
      */
     public function __get($name)
     {
         // Return the data, if it is available
         return isset($this->_data[$name]) ? $this->_data[$name] : NULL;
+    }
+
+    /**
+     * Traps any calls using isset on undefined virtual properties on this
+     * class instance.
+     *
+     * @param   string  The name of the key to check using isset.
+     * @return  mixed   The data in this member variable.
+     */
+    public function __isset($name)
+    {
+        // Return the result of isset on the passed key name
+        return isset($this->_data[$name]);
     }
 
     /**
