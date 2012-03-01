@@ -67,15 +67,15 @@ class Kyoto_Tycoon_ORM {
         } else {
             // Grab the defaults and cast them to an object so we know what
             // syntax to use
-            $defaults = (object) $this->_get_defaults();
+            $defaults = (array) $this->_get_defaults();
 
             // Grab a shortcut reference to the name of the primary key
             $primary_key_name = $this->_primary_key_name;
 
             // If the primary key is one of the defaults
-            if (isset($defaults->$primary_key_name)) {
+            if (isset($defaults[$primary_key_name])) {
                 // Copy the primary key value
-                $this->_id = $defaults->$primary_key_name;
+                $this->_id = $defaults[$primary_key_name];
             }
 
             // Set up the default data
