@@ -176,6 +176,24 @@ class Kyoto_Tycoon_ORM {
     }
 
     /**
+     * Delete this record from Kyoto Tycoon.
+     *
+     * @return  object  The reference to this class instance so we can do
+     *                  method chaining.
+     */
+    public function delete()
+    {
+        // Determine the key name
+        $key_name = $this->_get_key_name();
+
+        // Attempt to remove the Kyoto Tycoon record
+        $this->_client->remove($key_name);
+
+        // Return the reference to this class instance
+        return $this;
+    }
+
+    /**
      * Returns boolean TRUE if the record was successfully loaded.
      *
      * @return  bool  If we loaded the record, TRUE.
