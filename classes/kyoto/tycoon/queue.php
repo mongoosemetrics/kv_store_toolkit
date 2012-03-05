@@ -96,7 +96,7 @@ class Kyoto_Tycoon_Queue {
         $data = $this->_client->seize($key_name);
 
         // Return the data
-        return $data;
+        return json_decode($data);
     }
 
     /**
@@ -121,7 +121,7 @@ class Kyoto_Tycoon_Queue {
             self::SUFFIX_INDEX_SEPARATOR.((string) $write_position);
 
         // Set the data
-        $this->_client->set($key_name, $data);
+        $this->_client->set($key_name, json_encode($data));
 
         // Remove the lock
         $this->_client->_unlock($this->_get_key_prefix());
