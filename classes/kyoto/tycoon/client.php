@@ -127,6 +127,7 @@ class Kyoto_Tycoon_Client {
         $this->_client = REST_Client::instance($name, array(
             'uri' => 'http://'.$config['host'].':'.$config['port'].'/',
             'content_type' => self::CONTENT_TYPE_BASE64_ENCODED,
+            'keep_alive' => 30,
         ));
     }
 
