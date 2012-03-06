@@ -51,7 +51,7 @@ class Kyoto_Tycoon_Client {
                 // Define a default set of configuration options
                 $defaults = array(
                     'host' => '127.0.0.1',
-                    'port' => '1978'
+                    'port' => '1978',
                 );
 
                 // Overlay the passed configuration information on top of
