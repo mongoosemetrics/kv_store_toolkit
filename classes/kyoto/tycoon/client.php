@@ -540,7 +540,7 @@ class Kyoto_Tycoon_Client {
      * @return  boolean  If we were able to get the lock, TRUE. If we were
      *                   unable to get the lock, FALSE.
      */
-    public function _lock($name,$lock_timeout)
+    public function lock($name, $lock_timeout)
     {
         // Determine the lock expiration microtime
         $expiration_microtime = microtime(TRUE) + $lock_timeout;
@@ -587,7 +587,7 @@ class Kyoto_Tycoon_Client {
      * @return  object  The instance of this class so we can do
      *                  method chaining.
      */
-    public function _unlock($name)
+    public function unlock($name)
     {
         // Determine the name of the key
         $key_name = $name.self::SUFFIX_LOCK;

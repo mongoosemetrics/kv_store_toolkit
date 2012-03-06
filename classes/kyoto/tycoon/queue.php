@@ -62,7 +62,7 @@ class Kyoto_Tycoon_Queue {
     public function shift($lock_timeout = 0)
     {
         // Attempt to get the lock
-        $this->_client->_lock($this->_get_key_prefix(), $lock_timeout);
+        $this->_client->lock($this->_get_key_prefix(), $lock_timeout);
 
         // Grab the current read and write positions
         $read_position = $this->_get_read_position();
@@ -75,7 +75,7 @@ class Kyoto_Tycoon_Queue {
             $this->_reset_read_and_write_positions();
 
             // Remove the lock
-            $this->_client->_unlock($this->_get_key_prefix());
+            $this->_client->unlock($this->_get_key_prefix());
 
             // Throw an exception
             throw new Kyoto_Tycoon_Queue_Exception('No data in queue.', NULL,
@@ -86,7 +86,7 @@ class Kyoto_Tycoon_Queue {
         $read_position = $this->_increment_read_position();
 
         // Remove the lock
-        $this->_client->_unlock($this->_get_key_prefix());
+        $this->_client->unlock($this->_get_key_prefix());
 
         // Determine the name of the data key
         $key_name = $this->_get_key_prefix().
@@ -111,7 +111,7 @@ class Kyoto_Tycoon_Queue {
     public function push($data, $lock_timeout = 30)
     {
         // Attempt to get the lock
-        $this->_client->_lock($this->_get_key_prefix(), $lock_timeout);
+        $this->_client->lock($this->_get_key_prefix(), $lock_timeout);
 
         // Increment the write position
         $write_position = $this->_increment_write_position();
@@ -124,7 +124,7 @@ class Kyoto_Tycoon_Queue {
         $this->_client->set($key_name, json_encode($data));
 
         // Remove the lock
-        $this->_client->_unlock($this->_get_key_prefix());
+        $this->_client->unlock($this->_get_key_prefix());
 
         // Return the instance of this class
         return $this;
