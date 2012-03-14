@@ -15,7 +15,12 @@ class Kyoto_Tycoon_ORM {
      *               we use to do the actual communication with the Kyoto
      *               Tycoon server.
      */
-    protected $_client = NULL;
+    protected $_db = NULL;
+
+    /**
+     * @var  string  Holds the model name.
+     */
+    protected $_object_name = NULL;
 
     /**
      * @var  string  Holds the name of the primary key.
@@ -23,9 +28,14 @@ class Kyoto_Tycoon_ORM {
     protected $_primary_key_name = 'id';
 
     /**
+     * @var  string  Holds the default suffix for foreign keys.
+     */
+    protected $_foreign_key_suffix = '_id';
+
+    /**
      * @var  mixed  Holds the unique primary key value for this record.
      */
-    protected $_id = NULL;
+    protected $_primary_key_value = NULL;
 
     /**
      * @var  bool  If we were able to load the data, this variable will be
@@ -36,7 +46,12 @@ class Kyoto_Tycoon_ORM {
     /**
      * @var  array  Holds all of the data in the record.
      */
-    protected $_data = array();
+    protected $_object = array();
+
+    /**
+     * @var  array  Holds all of the belongs-to relationships.
+     */
+    protected $_belongs_to = array();
 
     /**
      * Sets up this ORM record, including any optional Kyoto Tycoon server
@@ -52,15 +67,14 @@ class Kyoto_Tycoon_ORM {
      */
     public function __construct($id = NULL, $client_name = NULL, $config = NULL)
     {
-        // Create a new Kyoto_Tycoon_Client to do the actual communication with
-        // the Kyoto Tycoon server
-        $this->_client = Kyoto_Tycoon_Client::instance($client_name, $config);
+        // Initialize this model
+        $this->_initialize();
 
         // Store the passed id
-        $this->_id = $id;
+        $this->_primary_key_value = $id;
 
         // If we have an id value
-        if (isset($this->_id)) {
+        if (isset($this->_primary_key_value)) {
             // Attempt to load this record
             $this->_load();
         // If this is a new record
@@ -75,11 +89,11 @@ class Kyoto_Tycoon_ORM {
             // If the primary key is one of the defaults
             if (isset($defaults[$primary_key_name])) {
                 // Copy the primary key value
-                $this->_id = $defaults[$primary_key_name];
+                $this->_primary_key_value = $defaults[$primary_key_name];
             }
 
             // Set up the default data
-            $this->_data = $defaults;
+            $this->_object = $defaults;
         }
     }
 
@@ -109,13 +123,13 @@ class Kyoto_Tycoon_ORM {
     public function __set($name, $value)
     {
         // Set the data
-        $this->_data[$name] = $value;
+        $this->_object[$name] = $value;
 
         // If the name of the variable we are setting is the same as the
         // primary key name
         if ($name === $this->_primary_key_name) {
             // Set the primary key value
-            $this->_id = $value;
+            $this->_primary_key_value = $value;
         }
     }
 
@@ -126,10 +140,28 @@ class Kyoto_Tycoon_ORM {
      * @param   string  The name of the key to return.
      * @return  mixed   The data in this member variable.
      */
-    public function __get($name)
+    public function __get($column)
     {
-        // Return the data, if it is available
-        return isset($this->_data[$name]) ? $this->_data[$name] : NULL;
+        // If we have an object property with the passed column
+        if (array_key_exists($column, $this->_object)) {
+            // Return the data from the property
+            return $this->_object[$column];
+
+        // If we have a belongs-to relationship with this column
+        } elseif (isset($this->_belongs_to[$column])) {
+            // Grab shortcut variables to the model name and foreign key name
+            $model = $this->_belongs_to[$column]['model'];
+            $foreign_key = $this->_belongs_to[$column]['foreign_key'];
+
+            // Attempt to load and return a record using the configured model
+            // name and foreign key
+            return ORM::factory($model, $this->_object[$foreign_key]);
+        }
+
+        // Throw an exception
+		throw new Kohana_Exception('The :property property does not exist in '.
+            'the :class class.', array(':property' => $column,
+            ':class' => get_class($this)));
     }
 
     /**
@@ -142,7 +174,7 @@ class Kyoto_Tycoon_ORM {
     public function __isset($name)
     {
         // Return the result of isset on the passed key name
-        return isset($this->_data[$name]);
+        return isset($this->_object[$name]);
     }
 
     /**
@@ -169,7 +201,7 @@ class Kyoto_Tycoon_ORM {
         $key_name = $this->_get_key_name();
 
         // Attempt to JSON-encode and save this records data
-        $this->_client->set($key_name, json_encode($this->_data));
+        $this->_db->set($key_name, json_encode($this->_object));
 
         // Return the reference to this class instance
         return $this;
@@ -187,10 +219,21 @@ class Kyoto_Tycoon_ORM {
         $key_name = $this->_get_key_name();
 
         // Attempt to remove the Kyoto Tycoon record
-        $this->_client->remove($key_name);
+        $this->_db->remove($key_name);
 
         // Return the reference to this class instance
         return $this;
+    }
+
+    /**
+     * Returns the current primary key value.
+     *
+     * @return  mixed  The value of the primary key.
+     */
+    public function pk()
+    {
+        // Return the value of the primary key
+        return $this->_primary_key_value;
     }
 
     /**
@@ -212,7 +255,7 @@ class Kyoto_Tycoon_ORM {
     public function export()
     {
         // Return a copy of the data cast into an object
-        return json_decode(json_encode($this->_data));
+        return json_decode(json_encode($this->_object));
     }
 
     /**
@@ -230,12 +273,12 @@ class Kyoto_Tycoon_ORM {
         $this->_loaded = FALSE;
 
         // Erase the data on this record
-        $this->_data = array();
+        $this->_object = array();
 
         // Wrap the call to get the data
         try {
             // Attempt to load this record from Kyoto Tycoon
-            $encoded_data = $this->_client->get($key_name);
+            $encoded_data = $this->_db->get($key_name);
         // Catch any exceptions
         } catch (Kyoto_Tycoon_Exception $exception) {
             // Return a reference to this class instance
@@ -256,10 +299,44 @@ class Kyoto_Tycoon_ORM {
         $this->_loaded = TRUE;
 
         // Store the loaded data
-        $this->_data = (array) $data;
+        $this->_object = (array) $data;
 
         // Return the reference to this class instance
         return $this;
+    }
+
+    /**
+     * Prepares the model class instance.
+     *
+     * @return  null
+     */
+    protected function _initialize()
+    {
+        // Determine what the object name is by removing the "Model_"
+        // from the class name
+        $this->_object_name = strtolower(substr(get_class($this), 6));
+
+        // If we have no database class
+        if ( ! is_object($this->_db)) {
+            // Create a new Kyoto_Tycoon_Client to do the actual communication
+            // with the Kyoto Tycoon server
+            $this->_db = Kyoto_Tycoon_Client::instance($client_name, $config);
+        }
+
+        // Define an empty array to store the defaults in
+        $defaults = array();
+
+        // Loop over each of the belongs-to relationships
+		foreach ($this->_belongs_to as $alias => $details)
+		{
+            // Define some defaults
+			$defaults['model'] = $alias;
+			$defaults['foreign_key'] = $alias.$this->_foreign_key_suffix;
+
+            // Create the final belongs-to relationship configuration data
+            // by merging the defaults with the actual data
+			$this->_belongs_to[$alias] = array_merge($defaults, $details);
+		}
     }
 
     /**
@@ -270,34 +347,8 @@ class Kyoto_Tycoon_ORM {
      */
     protected function _get_key_name()
     {
-        // Grab the class name
-        $class_name = $this->_get_class_name();
-
-        // Break the local class name apart on the underscores
-        $class_name_parts = explode('_', $class_name);
-
-        // Remove the first word
-        array_shift($class_name_parts);
-
-        // Re-join the remaining parts and use that as the key name prefix
-        $key_name_prefix = implode('_', $class_name_parts);
-
-        // Convert the key name prefix to all uppercase
-        $key_name_prefix = strtoupper($key_name_prefix);
-
         // Return the Kyoto Tycoon key name
-        return $key_name_prefix.'_'.((string) $this->_id);
-    }
-
-    /**
-     * Returns the all-lowercase version of this class instances class name.
-     *
-     * @return  string  The class name for this class instance, in lowercase.
-     */
-    protected function _get_class_name()
-    {
-        // Return this class instances name
-        return get_class($this);
+        return strtoupper($this->_object_name.'_'.((string) $this->pk()));
     }
 
 } // End Kyoto_Tycoon_ORM
