@@ -227,7 +227,7 @@ class Kyoto_Tycoon_Client {
         }
 
         // Make the Kyoto Tycoon RPC request
-        $this->_rpc('set', $request);
+        $this->_rpc('set_bulk', $request);
 
         // Return a reference to this class instance
         return $this;
