@@ -201,6 +201,39 @@ class Kyoto_Tycoon_Client {
     }
 
     /**
+     * Sets multiple Kyoto Tycoon key/value pairs using a single request.
+     *
+     * @param   array   An array or object of key/value pairs to set.
+     * @param   int     The number of seconds the keys should exist before
+     *                  they automatically expire. Defaults to NULL (forever).
+     * @reutrn  object  A reference to this class instance, so we can do
+     *                  method chaining.
+     */
+    public function set_bulk($data, $expires = NULL)
+    {
+        // Define a place to hold the request body
+        $request = array();
+
+        // If expires is set
+        if (isset($expires)) {
+            // Add it to the request
+            $request['xt'] = $expires;
+        }
+
+        // Loop over the passed data
+        foreach ($data as $key => $value) {
+            // Add this key/value pair to the request
+            $request['_'.$key] = $value;
+        }
+
+        // Make the Kyoto Tycoon RPC request
+        $this->_rpc('set', $request);
+
+        // Return a reference to this class instance
+        return $this;
+    }
+
+    /**
      * Handles the retrieval of a single Kyoto Tycoon key/value pair.
      *
      * @param   string  The name of the key being retrieved.
