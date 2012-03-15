@@ -68,7 +68,7 @@ class Kyoto_Tycoon_ORM {
     public function __construct($id = NULL, $client_name = NULL, $config = NULL)
     {
         // Initialize this model
-        $this->_initialize();
+        $this->_initialize($client_name, $config);
 
         // Store the passed id
         $this->_primary_key_value = $id;
@@ -308,9 +308,14 @@ class Kyoto_Tycoon_ORM {
     /**
      * Prepares the model class instance.
      *
+     * @param  string  Optional. The name of the Kyoto Tycoon client
+     *                 instance. Defaults to NULL.
+     * @param  array   Optional. Any specific configuration data to pass to
+     *                 new instances of the Kyoto Tycoon client class. Also
+     *                 defaults to NULL.
      * @return  null
      */
-    protected function _initialize()
+    protected function _initialize($client_name = NULL, $config = NULL)
     {
         // Determine what the object name is by removing the "Model_"
         // from the class name
