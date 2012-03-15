@@ -353,7 +353,7 @@ class Kyoto_Tycoon_ORM {
     protected function _get_key_name()
     {
         // Return the Kyoto Tycoon key name
-        return strtoupper($this->_object_name.'_'.((string) $this->pk()));
+        return strtoupper($this->_object_name).'_'.((string) $this->pk());
     }
 
 } // End Kyoto_Tycoon_ORM
