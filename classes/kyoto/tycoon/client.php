@@ -562,19 +562,21 @@ class Kyoto_Tycoon_Client {
     }
 
     // No matter what, locks expire after 30 seconds
-    const LOCK_EXPIRES = 30;
+    const DEFAULT_LOCK_EXPIRES = 30;
     const SUFFIX_LOCK = '_LOCK';
     const ERROR_LOCK_TIMEOUT = 408;
 
     /**
-     * Attempts to get a lock on the queue.
+     * Attempts to get a lock on the passed name.
      *
      * @param   int      The number of seconds we will continue to try to get
      *                   the lock.
+     * @param   int      Optional. The number of seconds before the lock
+     *                   should expire. Defaults to 30 seconds.
      * @return  boolean  If we were able to get the lock, TRUE. If we were
      *                   unable to get the lock, FALSE.
      */
-    public function lock($name, $lock_timeout)
+    public function lock($name, $lock_timeout, $lock_expires = NULL)
     {
         // Determine the lock expiration microtime
         $expiration_microtime = microtime(TRUE) + $lock_timeout;
@@ -582,12 +584,15 @@ class Kyoto_Tycoon_Client {
         // Determine the name of the lock key
         $key_name = $name.self::SUFFIX_LOCK;
 
+        // Determine how long before the lock should expire
+        $lock_expires = isset($lock_expires) ? $lock_expires :
+            self::DEFAULT_LOCK_EXPIRES;
+
         // Start an infinite loop to try and get the lock until we either
         // succeed in getting the lock, or exceed the lock timeout
         while (TRUE) {
             // Do an increment on the key name and grab the result
-            $result = (int) $this->increment($key_name, 1, 0,
-                self::LOCK_EXPIRES);
+            $result = (int) $this->increment($key_name, 1, 0, $lock_expires);
 
             // If we did not get exactly the number 1, we did not get the lock
             if ($result !== 1) {
