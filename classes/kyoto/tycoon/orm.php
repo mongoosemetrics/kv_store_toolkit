@@ -424,6 +424,12 @@ class Kyoto_Tycoon_ORM {
             $remote_value = isset($this->_remote_object[$name]) ?
                 $this->_remote_object[$name] : NULL;
 
+            $new_alternate_primary_key = $this->_get_alternate_key_name(
+                $name, $value);
+
+            // Set the new alternate primary key
+            $this->_db->set($new_alternate_primary_key, (string) $this->pk());
+
             // If the value of the current alternate primary key is not
             // different then its remote value
             if ((string) $remote_value === (string) $value) {
@@ -434,11 +440,6 @@ class Kyoto_Tycoon_ORM {
             // Grab the previous alternate primary key name
             $old_alternate_primary_key = $this->_get_alternate_key_name(
                 $name, $remote_value);
-            $new_alternate_primary_key = $this->_get_alternate_key_name(
-                $name, $value);
-
-            // Set the new alternate primary key
-            $this->_db->set($new_alternate_primary_key, (string) $this->pk());
 
             // Remove the old alternate key
             $this->_db->remove($old_alternate_primary_key);
