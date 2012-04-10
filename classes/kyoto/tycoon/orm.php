@@ -447,12 +447,17 @@ class Kyoto_Tycoon_ORM {
                 continue;
             }
 
-            // Grab the previous alternate primary key name
-            $old_alternate_primary_key = $this->_get_alternate_key_name(
-                $name, $remote_value);
+            // We dont actually care if this works or not
+            try {
+                // Grab the previous alternate primary key name
+                $old_alternate_primary_key = $this->_get_alternate_key_name(
+                    $name, $remote_value);
 
-            // Remove the old alternate key
-            $this->_db->remove($old_alternate_primary_key);
+                // Remove the old alternate key
+                $this->_db->remove($old_alternate_primary_key);
+
+            // Catch any Kyoto Tycoon exceptions
+            } catch (Kyoto_Tycoon_Exception $exception) {}
         }
 
         // Return a reference to this class instance
