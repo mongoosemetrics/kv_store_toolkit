@@ -116,7 +116,7 @@ class Kyoto_Tycoon_ORM {
     public function reload()
     {
         // Attempt to re-load the data from Kyoto Tycoon
-        $this->_load();
+        $this->_load($this->_primary_key_value);
 
         // Return the reference to this class instance
         return $this;
