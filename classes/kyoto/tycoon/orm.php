@@ -238,6 +238,9 @@ class Kyoto_Tycoon_ORM {
         // Attempt to remove the Kyoto Tycoon record
         $this->_db->remove($key_name);
 
+        // Remove any alternate primary keys
+        $this->_remove_alternate_primary_keys();
+
         // Return the reference to this class instance
         return $this;
     }
@@ -302,7 +305,7 @@ class Kyoto_Tycoon_ORM {
             $keys = array_keys($id);
             $values = array_values($id);
 
-            // Only use the first set
+            // Only use the first key/value pair
             $key = array_shift($keys);
             $value = array_shift($values);
 
@@ -412,6 +415,12 @@ class Kyoto_Tycoon_ORM {
      */
     protected function _update_alternate_primary_keys()
     {
+        // If there are no alternate primary keys configured
+        if (empty($this->_alternate_primary_keys)) {
+            // Do nothing
+            return $this;
+        }
+
         // Loop through the top-level properties in the object
         foreach ($this->_object as $name => $value) {
             // If the current property name is not an alternate primary key
@@ -420,15 +429,16 @@ class Kyoto_Tycoon_ORM {
                 continue;
             }
 
-            // Grab a shortcut reference to the remote value
-            $remote_value = isset($this->_remote_object[$name]) ?
-                $this->_remote_object[$name] : NULL;
-
+            // Determine the name of the alternate primary key
             $new_alternate_primary_key = $this->_get_alternate_key_name(
                 $name, $value);
 
             // Set the new alternate primary key
             $this->_db->set($new_alternate_primary_key, (string) $this->pk());
+
+            // Grab a shortcut reference to the remote value
+            $remote_value = isset($this->_remote_object[$name]) ?
+                $this->_remote_object[$name] : NULL;
 
             // If the value of the current alternate primary key is not
             // different then its remote value
@@ -443,6 +453,39 @@ class Kyoto_Tycoon_ORM {
 
             // Remove the old alternate key
             $this->_db->remove($old_alternate_primary_key);
+        }
+
+        // Return a reference to this class instance
+        return $this;
+    }
+
+    /**
+     * Removes any alternate primary keys that are configured.
+     *
+     * @return  object  A reference to this class instance.
+     */
+    protected function _remove_alternate_primary_keys()
+    {
+        // If there are no alternate primary keys configured
+        if (empty($this->_alternate_primary_keys)) {
+            // Do nothing
+            return $this;
+        }
+
+        // Loop through the top-level properties in the remote object
+        foreach ($this->_remote_object as $name => $value) {
+            // If the current property name is not an alternate primary key
+            if ( ! in_array($name, $this->_alternate_primary_keys)) {
+                // Move on to the next property
+                continue;
+            }
+
+            // Grab the alternate primary key name
+            $alternate_primary_key = $this->_get_alternate_key_name(
+                $name, $value);
+
+            // Remove the alternate primary key
+            $this->_db->remove($alternate_primary_key);
         }
 
         // Return a reference to this class instance
