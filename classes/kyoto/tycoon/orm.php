@@ -440,24 +440,21 @@ class Kyoto_Tycoon_ORM {
             $remote_value = isset($this->_remote_object[$name]) ?
                 $this->_remote_object[$name] : NULL;
 
-            // If the value of the current alternate primary key is not
-            // different then its remote value
-            if ((string) $remote_value === (string) $value) {
+            // If we do not have a remote value yet, or if the value of the
+            // current alternate primary key value is not different then
+            // its remote value
+            if ( ! isset($remote_value) OR
+                (string) $remote_value === (string) $value) {
                 // Move on to the next property
                 continue;
             }
 
-            // We dont actually care if this works or not
-            try {
-                // Grab the previous alternate primary key name
-                $old_alternate_primary_key = $this->_get_alternate_key_name(
-                    $name, $remote_value);
+            // Grab the previous alternate primary key name
+            $old_alternate_primary_key = $this->_get_alternate_key_name(
+                $name, $remote_value);
 
-                // Remove the old alternate key
-                $this->_db->remove($old_alternate_primary_key);
-
-            // Catch any Kyoto Tycoon exceptions
-            } catch (Kyoto_Tycoon_Exception $exception) {}
+            // Remove the old alternate key
+            $this->_db->remove($old_alternate_primary_key);
         }
 
         // Return a reference to this class instance
