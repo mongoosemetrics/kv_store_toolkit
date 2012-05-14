@@ -9,4 +9,14 @@
  * @copyright  (c) 2011-2012 Kohana Team
  * @license    http://kohanaphp.com/license
  */
-class Kyoto_Tycoon_Exception extends Kohana_Exception {}
+class Kyoto_Tycoon_Exception extends Kohana_Exception {
+
+   public function __construct($body = '', $unknown = NULL, $status = NULL)
+   {
+      parent::__construct($body, $unknown, $status);
+      
+      $this->body = $body;
+      $this->status = $status;
+   }
+
+}

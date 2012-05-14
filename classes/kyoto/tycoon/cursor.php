@@ -14,7 +14,12 @@ class Kyoto_Tycoon_Cursor {
     * @var  string  The default instance name.
     */
    public static $default = 'default';
-   
+
+    /**
+     * @var  array  References to all of the cursor instances.
+     */
+   public static $instances = array();
+
    /**
     * Get a singleton object instance of this class. If configuration is not
     * specified, it will be loaded from the kyoto configuration file using
@@ -60,7 +65,7 @@ class Kyoto_Tycoon_Cursor {
     */
    private $_client = null;
    
-   protected function __construct($name, array $config)
+   protected function __construct($name, $config = null)
    {
       // Set the instance name
       $this->_instance = $name;
@@ -68,8 +73,7 @@ class Kyoto_Tycoon_Cursor {
       // Store this cursor instance
       self::$instances[$name] = $this;   
 
-
-      $this->_client = new Kyoto_Tycoon_Client($name, $config);
+      $this->_client = Kyoto_Tycoon_Client::instance($name, $config);
    }
 
    protected static function createCursor()
@@ -88,10 +92,22 @@ class Kyoto_Tycoon_Cursor {
       
       // Intialize our cursor
       
+      $opts = array(
+         'CUR' => $this->_cursor
+      );
+
+      if ($keyName != '') $opts['key'] = $keyName;
+      
       try {
-         $this->_client->_rpc('cur_jump', array('CUR' => $this->_cursor));
+         $this->_client->call('cur_jump', $opts);
       } catch (Kyoto_Tycoon_Exception $ex) {
-         return false;
+         print_r($ex->body);
+         echo "\r\n";
+         print_r($ex);
+         exit;
+      
+         //return false;
+         throw $ex;
       };
 
       $remaining = $maxResults;
@@ -100,20 +116,21 @@ class Kyoto_Tycoon_Cursor {
       while ($continue) {
       
          $opts = array(
-            'CUR' => $this->_cursor
+            'CUR' => $this->_cursor,
+            'step' => true
            );
 
          try {
-            $response = $this->_client->_rpc('cur_get', $opts);
+            $response = $this->_client->call('cur_get', $opts);
          } catch (Kyoto_Tycoon_Exception $ex) {
             return false;
          };
 
          $key = array_key_exists('key', $response) ?
-            $response : '';
+            $response['key'] : '';
 
          $value = array_key_exists('value', $response) ?
-            $response : '';
+            $response['value'] : '';
 
          $results[] = array(
             'key' => $key,
@@ -135,11 +152,10 @@ class Kyoto_Tycoon_Cursor {
    public static function test_list_keys()
    {
       $cur = self::instance();
-      
+
       $results = $cur->listKeys('', 50);
-      
+
       print_r($results);
-      
+
    }     
 }
-

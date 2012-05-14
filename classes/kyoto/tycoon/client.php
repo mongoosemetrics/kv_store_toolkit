@@ -366,6 +366,23 @@ class Kyoto_Tycoon_Client {
     }
 
     /**
+     * Export the _rpc method to external callers
+     *    
+     * Performs a Kyoto Tycoon RPC request over HTTP POST, encoding the passed
+     * request data and decoding the response.
+     *
+     * @param   string   The Kyoto Tycoon RPC method to call.
+     * @param   array    The table of request data to send.
+     * @param   boolean  Optional. If we should assume we are encoding and
+     *                   decoding key/value pairs. Defaults to TRUE.
+     * @return  array    The parsed response data table.
+     */
+    public function call($method, $data, $key_value_pairs = TRUE)
+    {
+        return $this->_rpc($method, $data, $key_value_pairs);
+    }
+
+    /**
      * Encodes the passed 2-dimensional array structure into a TSV formatted
      * string.
      *
