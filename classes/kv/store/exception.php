@@ -3,10 +3,10 @@
  * Simple extension Kohana_Exception. Allows us to use the PHP 'instanceof'
  * keyword to determine the type of exception that occurred.
  *
- * @package    Kohana/Kyoto Tycoon Client
+ * @package    KV Store Client
  * @category   Extension
- * @author     Kohana Team
- * @copyright  (c) 2011-2012 Kohana Team
+ * @author     Mongoose Metrics
+ * @copyright  (c) 2011-2012 Kohana Team, (c) 2012 Mongoose Metrics
  * @license    http://kohanaphp.com/license
  */
-class Kyoto_Tycoon_Queue_Exception extends Kyoto_Tycoon_Exception {}
+class KV_Store_Exception extends Kohana_Exception {}

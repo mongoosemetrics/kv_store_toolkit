@@ -8,7 +8,7 @@
  * @copyright  (c) 2011-2012 Kohana Team
  * @license    http://kohanaphp.com/license
  */
-class Kyoto_Tycoon_Queue {
+class Kyoto_Tycoon_Queue extends KV_Store_Queue {
 
     /**
      * @var  string  Holds the queue name.
@@ -78,7 +78,7 @@ class Kyoto_Tycoon_Queue {
             $this->_client->unlock($this->_get_key_prefix());
 
             // Throw an exception
-            throw new Kyoto_Tycoon_Queue_Exception('No data in queue.', NULL,
+            throw new KV_Store_Queue_Exception('No data in queue.', NULL,
                 self::ERROR_EMPTY_QUEUE);
         }
 
