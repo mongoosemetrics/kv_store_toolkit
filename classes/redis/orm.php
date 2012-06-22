@@ -10,7 +10,7 @@
  */
 class Redis_ORM extends KV_Store_ORM {
 
-    protected static function create_db_instance()
+    protected function create_db_instance()
     {
         // Create a new Redis client
         return Redis::factory();

@@ -383,7 +383,7 @@ abstract class KV_Store_ORM {
         // If we have no database class
         if ( ! is_object($this->_db)) {
             // Create an instance of our KV store implementation
-            $this->_db = call_user_func_array(static::create_db_instance, func_get_arguments());
+            $this->_db = call_user_func_array(array($this, 'create_db_instance'), func_get_args());
         }
 
         // Define an empty array to store the defaults in
@@ -455,7 +455,7 @@ abstract class KV_Store_ORM {
         return $this;
     }
 
-    protected abstract static function create_db_instance();
+    protected abstract function create_db_instance();
 
     /**
      * Removes any alternate primary keys that are configured.

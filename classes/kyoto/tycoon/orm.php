@@ -10,7 +10,7 @@
  */
 class Kyoto_Tycoon_ORM extends KV_Store_ORM {
 
-    protected static function create_db_instance($client_name = NULL, $config = NULL)
+    protected function create_db_instance($client_name = NULL, $config = NULL)
     {
         // Create a new Kyoto_Tycoon_Client to do the actual communication
         // with the Kyoto Tycoon server
