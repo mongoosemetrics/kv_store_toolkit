@@ -26,8 +26,9 @@ class Redis_Queue extends KV_Store_Queue {
         $client = Redis::factory();
 
         try {
-            $task = $client->rpoplpush($this->_get_list_name(), $this->_get_processing_list_name());
-            return $task;
+            $json = $client->rpoplpush($this->_get_list_name(), $this->_get_processing_list_name());
+            $data = json_decode($json);
+            return $data;
         } catch (Exception $ex) {
             return null;
         };
@@ -45,7 +46,7 @@ class Redis_Queue extends KV_Store_Queue {
     public function push($data, $lock_timeout = 30)
     {
         $client = Redis::factory();
-        $client -> lpush( $this->_get_list_name(), $data );
+        $client -> lpush( $this->_get_list_name(), json_encode($data) );
     }
 
     /**
