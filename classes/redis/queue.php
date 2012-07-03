@@ -10,6 +10,8 @@
  */
 class Redis_Queue extends KV_Store_Queue {
 
+    const PREFIX_QUEUE_PROCESSING = 'QUEUE_PROCESSING_';
+
     /**
      * Attempts to shift the next item from the queue.
      *
@@ -21,7 +23,14 @@ class Redis_Queue extends KV_Store_Queue {
      */
     public function shift($lock_timeout = 0)
     {
-        /* TODO: implement */
+        $client = Redis::factory();
+
+        try {
+            $task = $client->rpoplpush($this->_get_list_name(), $this->_get_processing_list_name());
+            return $task;
+        } catch (Exception $ex) {
+            return null;
+        };
     }
 
     /**
@@ -35,7 +44,8 @@ class Redis_Queue extends KV_Store_Queue {
      */
     public function push($data, $lock_timeout = 30)
     {
-        /* TODO: implement */
+        $client = Redis::factory();
+        $client -> lpush( $this->_get_list_name(), $data );
     }
 
     /**
@@ -46,6 +56,30 @@ class Redis_Queue extends KV_Store_Queue {
     public function status()
     {
         /* TODO: implement */
+    }
+
+    /**
+     * Returns the full name of the list using the instance name.
+     *
+     * @return  string  The prefix for all of the keys required to represent
+     *                  this queue.
+     */
+    protected function _get_list_name()
+    {
+        // Return the prefix for all of the keys
+        return static::PREFIX_QUEUE.strtoupper($this->_name);
+    }
+
+    /**
+     * Returns the full name of the processing list using the instance name.
+     *
+     * @return  string  The prefix for all of the keys required to represent
+     *                  this queue.
+     */
+    protected function _get_processing_list_name()
+    {
+        // Return the prefix for all of the keys
+        return static::PREFIX_QUEUE_PROCESSING.strtoupper($this->_name);
     }
 
 } // End Redis_Queue
