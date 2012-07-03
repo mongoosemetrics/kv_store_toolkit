@@ -221,7 +221,7 @@ abstract class KV_Store_ORM {
         $this->_remote_object = (array) $this->_object;
 
         // If there is a post_save hook, call it
-        if (method_exists(array($this, 'post_save'))) $this->post_save();
+        if (method_exists($this, 'post_save')) $this->post_save();
 
         // Return the reference to this class instance
         return $this;
