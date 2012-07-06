@@ -13,6 +13,29 @@ class Redis_Queue extends KV_Store_Queue {
     const PREFIX_QUEUE_PROCESSING = 'QUEUE_PROCESSING_';
 
     /**
+     * Create a queue abstraction for the passed queue name in Redis
+     *
+     * @param  string  The name of the queue.
+     *
+     */
+    public static function factory($name)
+    {
+        return new Redis_Queue($name);
+    }
+
+    /**
+     * Create a queue abstraction for the passed queue name in Redis
+     *
+     * @param  string  The name of the queue.
+     *
+     */
+    public function __construct($name)
+    {
+        // Set the queue name
+        $this->_name = $name;
+    }
+
+    /**
      * Attempts to shift the next item from the queue.
      *
      * @param   int     Optional. The number of seconds we will continue to

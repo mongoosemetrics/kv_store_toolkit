@@ -8,7 +8,7 @@
  * @copyright  (c) 2011-2012 Kohana Team, (c) 2012 Mongoose Metrics
  * @license    http://kohanaphp.com/license
  */
-class KV_Store_Queue {
+abstract class KV_Store_Queue {
 
     /**
      * @var  string  Holds the queue name.
