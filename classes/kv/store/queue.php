@@ -49,7 +49,21 @@ abstract class KV_Store_Queue {
      *                  'found' member is TRUE, then we have data to process
      *                  in the 'data' member.
      */
-    public function shift($lock_timeout = 0)
+    public function shift()
+    {
+        /* TODO: implement */
+    }
+
+    /**
+     * Attempts to shift the next item from the queue.
+     *
+     * @param   int     Optional. The number of seconds we will continue to
+     *                  try to get the lock. Defaults to 0 seconds.
+     * @return  object  An object with a 'found' and a 'data' member. If the
+     *                  'found' member is TRUE, then we have data to process
+     *                  in the 'data' member.
+     */
+    public function shift_work($timeout)
     {
         /* TODO: implement */
     }

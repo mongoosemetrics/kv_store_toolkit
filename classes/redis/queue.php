@@ -38,18 +38,34 @@ class Redis_Queue extends KV_Store_Queue {
     /**
      * Attempts to shift the next item from the queue.
      *
-     * @param   int     Optional. The number of seconds we will continue to
-     *                  try to get the lock. Defaults to 0 seconds.
-     * @return  object  An object with a 'found' and a 'data' member. If the
-     *                  'found' member is TRUE, then we have data to process
-     *                  in the 'data' member.
+     * @return  object  The next object on the queue (or null if none existed)
      */
-    public function shift($lock_timeout = 0)
+    public function shift()
     {
         $client = Redis::factory();
 
         try {
             $json = $client->rpoplpush($this->_get_list_name(), $this->_get_processing_list_name());
+            $data = json_decode($json);
+            return $data;
+        } catch (Exception $ex) {
+            return null;
+        };
+    }
+
+
+    /**
+     * Attempts to shift the next item from the queue.
+     *
+     * @param   int     Optional. The maximum time to wait for an item
+     * @return  object  The next object on the queue (or null if the time expired)
+     */
+    public function shift_wait($timeout = 0)
+    {
+        $client = Redis::factory();
+
+        try {
+            $json = $client->brpoplpush($this->_get_list_name(), $this->_get_processing_list_name(), $timeout);
             $data = json_decode($json);
             return $data;
         } catch (Exception $ex) {
