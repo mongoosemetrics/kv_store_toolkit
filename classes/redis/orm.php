@@ -17,6 +17,27 @@ class Redis_ORM extends KV_Store_ORM {
         // Create a new Redis client
         return Redis::factory();
     }
+    
+     /**
+     * Delete this record from Kyoto Tycoon.
+     *
+     * @return  object  The reference to this class instance so we can do
+     *                  method chaining.
+     */
+    public function delete()
+    {
+        // Determine the key name
+        $key_name = $this->_get_key_name();
+
+        // Attempt to remove the Kyoto Tycoon record
+        $this->_db->del($key_name);
+
+        // Remove any alternate primary keys
+        $this->_remove_alternate_primary_keys();
+
+        // Return the reference to this class instance
+        return $this;
+    }
 
     protected function post_save()
     {
