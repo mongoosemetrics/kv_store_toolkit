@@ -351,8 +351,20 @@ abstract class KV_Store_ORM {
             return $this;
         }
 
+        // First check if the encoded data was null 
+        if ($encoded_data === NULL) {
+            // Throw an exception
+            throw new KV_Store_ORM_Exception('Missing key.',
+                NULL, 500);
+        }
+
         // Attempt to deserialize (what should be) the JSON-encoded value
-        $data = json_decode($encoded_data);
+        try {
+            $data = json_decode($encoded_data);
+        } catch (Exception $ex) {
+            throw new KV_Store_ORM_Exception('JSON decode failure.',
+                NULL, 500);
+        }
 
         // If the attempt to decode failed
         if ($data === NULL AND $encoded_data !== 'null') {
