@@ -357,6 +357,9 @@ abstract class KV_Store_ORM {
             return $this;
         }
 
+        // Trim the data to remove whitespace around the JSON value
+        $encoded_data = trim($encoded_data);
+
         // Attempt to deserialize (what should be) the JSON-encoded value
         try {
             $data = json_decode($encoded_data);
