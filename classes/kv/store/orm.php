@@ -387,6 +387,20 @@ abstract class KV_Store_ORM {
     }
 
     /**
+     * Attempts to load the data from Redis.
+     *
+     * @param   mixed   The primary key, or alternate primary key value pair
+     *                  to use to load this record.
+     * @return  object  The reference to this class instance so we can do
+     *                  method chaining.
+     */
+    public function load($id)
+    {
+        $this->_load($id);
+        return $this;
+    }
+
+    /**
      * Prepares the model class instance.
      *
      * @return  null
