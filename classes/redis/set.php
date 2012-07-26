@@ -13,18 +13,18 @@ class Redis_Set extends Redis_ORM {
 
     public function is_member($value)
     {
-        return $this->_db->sismember($this->_get_key_name, $value);
+        return $this->_db->sismember($this->_get_key_name(), $value);
     }
 
     public function remove($value)
     {
-        return $this->_db->srem($this->_get_key_name, $value);
+        return $this->_db->srem($this->_get_key_name(), $value);
     }
 
     /* get all members of the set */
     public function members()
     {
-        return $this->_db->members($this->_get_key_name);
+        return $this->_db->members($this->_get_key_name());
     }
 
     /**
