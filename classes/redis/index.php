@@ -11,33 +11,40 @@
  */
 class Redis_Index_Set extends Redis_ORM {
 
-    public function __construct($orm, $foreign)
+    public function factory($orm_name, $foreign_name, $fk = '')
     {
-        $this->_orm = $orm;
-        $this->_pk = $orm->_primary_key_name;
-
-        if (is_object($foreign)) {
-            // assume foreign is an orm
-            $this->_fk = $foreign->_primary_key_name;
-        } else {
-            $this->_fk = $foreign;
-        };
-
+        return new Redis_Index($orm_name, $foreign_name, $fk);
     }
 
-    protected $_orm;
+    protected function __construct($orm_name, $foreign_name, $fk)
+    {
+        $this->_orm_name = $orm_name;
+        $this->_foreign_name = $foreign_name;
+        $this->_fk = $fk;
+    }
 
-    protected $_pk;
+    protected $_orm_name;
+    protected $_foreign_name;
     protected $_fk;
 
     protected function _get_key_name()
     {
-        $_object_name = $this->_orm->_object_name;
-        $name = $this->_fk;
-        $value = $orm->$name;
+        $_orm_name = $this->_orm_name;
+        $_foreign_name = $this->_foreign_name;
+        $_fk = $this->_fk;
 
         // Construct an index referencing this object using a foreign key for another entity
-        return strtoupper('S:I:'.$_object_name.':'.$name.':'.$value.'::'.$this->_orm->_primary_key_name);
+
+        // Example, index of inventory actions by campaign code
+        // S:I:CAMPAIGN:<code>::INVENTORY_ACTION => set( )
+
+        return strtoupper(
+            'S:I:' .        // This is a set used as an index.
+            $_foreign_name  // This is the object we are using to reach this object (index object).
+            $_fk .          // This is the value of the foreign key in this object
+                            // cooresponding to the index object.
+            $_orm_name .    // This is the object we want to reach
+        );
 
     }
 

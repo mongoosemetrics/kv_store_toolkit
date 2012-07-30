@@ -216,6 +216,9 @@ abstract class KV_Store_ORM {
         // Update the alternate primary keys
         $this->_update_alternate_primary_keys();
 
+        // Update belongs-to indices
+        $this->_update_belongs_to_indicies();
+
         // The new data has been written, so now the remote object
         // is identical to the current object
         $this->_remote_object = (array) $this->_object;
@@ -238,11 +241,14 @@ abstract class KV_Store_ORM {
         // Determine the key name
         $key_name = $this->_get_key_name();
 
-        // Attempt to remove the Kyoto Tycoon record
-        $this->_db->remove($key_name);
+        // Attempt to remove the Redis record
+        $this->_db->del($key_name);
 
         // Remove any alternate primary keys
         $this->_remove_alternate_primary_keys();
+
+        // Remove belongs-to relationship indicies
+        $this->_remove_belongs_to_indicies();
 
         // Return the reference to this class instance
         return $this;
@@ -486,7 +492,60 @@ abstract class KV_Store_ORM {
         return $this;
     }
 
-    protected abstract function create_db_instance();
+    /**
+     * Updates the belongs-to indicies if any are configured.
+     *
+     * @return  object  A reference to this class instance.
+     */
+    protected function _update_belongs_to_indicies()
+    {
+        // If there are no alternate primary keys configured
+        if (empty($this->_belongs_to)) {
+            // Do nothing
+            return $this;
+        }
+
+        // Loop through the top-level properties in the object
+        foreach ($this->_object as $name => $value) {
+
+            // If the current property name is not a belongs-to relationship
+            if ( ! in_array($name, $this->_belongs_to)) {
+                // Move on to the next property
+                continue;
+            }
+
+            // Get the belongs to object
+            $details = (object) $this->_belongs_to[$name];
+
+            // Get the name of the foreign_key
+            $foreign_key = isset($details->foreign_key) ?
+                $details->foreign_key : $name;
+
+            // Get the old value of this key
+            $remote_value = isset($this->_remote_object[$name]) ?
+                $this->_remote_object[$name] : NULL;
+
+            // Fail if we don't have a model
+            if (! isset($details->model)) {
+                continue; // log?
+            };
+
+            // Find the name of the model we belong to
+            $model = $details->model;
+
+            // Find the index for this key
+            $index = Redis_Index::factory($this->_object_name, $model, $foreign_key);
+
+            // Delete the entry for the prior value
+            // if it exists
+            $index->delete($remote_value);
+
+            // Create or update our entry
+            $index->update($value, $this->pk());
+
+        // Return a reference to this class instance
+        return $this;
+    }
 
     /**
      * Removes any alternate primary keys that are configured.
@@ -515,6 +574,53 @@ abstract class KV_Store_ORM {
 
             // Remove the alternate primary key
             $this->_db->remove($alternate_primary_key);
+        }
+
+        // Return a reference to this class instance
+        return $this;
+    }
+
+    /**
+     * Removes any belongs-to indicies for this object
+     *
+     * @return  object  A reference to this class instance.
+     */
+    protected function _remove_belongs_to_indicies()
+    {
+        // If there are no belongs-to relationships
+        if (empty($this->_belongs_to)) {
+            // Do nothing
+            return $this;
+        }
+
+        // Loop through the top-level properties in the remote object
+        foreach ($this->_remote_object as $name => $value) {
+            // If the current property name is not a belongs-to relationship
+            if ( ! in_array($name, $this->_belongs_to)) {
+                // Move on to the next property
+                continue;
+            }
+
+            // Get the belongs to object
+            $details = (object) $this->_belongs_to[$name];
+
+            // Get the name of the foreign_key
+            $foreign_key = isset($details->foreign_key) ?
+                $details->foreign_key : $name;
+
+            // Fail if we don't have a model
+            if (! isset($details->model)) {
+                continue; // log?
+            };
+
+            // Find the name of the model we belong to
+            $model = $details->model;
+
+            // Find the index for this key
+            $index = Redis_Index::factory($this->_object_name, $model, $foreign_key);
+
+            // Delete the entry if it exists
+            $index->delete($value);
         }
 
         // Return a reference to this class instance
